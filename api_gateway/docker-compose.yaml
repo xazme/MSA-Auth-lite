@@ -1,0 +1,44 @@
+networks:
+  api-gateway-net:
+    external: true
+    driver: bridge
+
+volumes:
+  kong-db-data:
+
+services:
+  kong:
+    image: kong:latest
+    environment:
+      KONG_PLUGINS: bundled,jwt-to-header
+      KONG_UNTRUSTED_LUA: "on"
+      KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: "kong.plugins.jwt.jwt_parser"
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_LOG_LEVEL: info
+    volumes:
+      - ./kong.yaml:/kong/declarative/kong.yml:ro
+      - ./plugin:/usr/local/share/lua/5.1/kong/plugins/jwt-to-header:ro
+    networks:
+      - api-gateway-net
+    restart: always
+    ports:
+      - "8000:8000" # proxy
+      - "8443:8443" # ssl proxy
+      - "8001:8001" # admin
+
+  konga:
+    image: pantsel/konga:latest
+    environment:
+      NODE_ENV: production
+    networks:
+      - api-gateway-net
+    ports:
+      - "1337:1337"
+    depends_on:
+      - kong
+    restart: always

@@ -1,0 +1,141 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: auth-service
+    url: http://auth-service:8000
+    routes:
+      - name: auth-public
+        paths:
+          - /api/auth-service/login
+          - /api/auth-service/register
+        strip_path: false
+        methods:
+          - POST
+        protocols:
+          - http
+          - https
+        preserve_host: true
+
+      - name: auth-refresh
+        paths:
+          - /api/auth-service/refresh
+        strip_path: false
+        methods:
+          - POST
+        protocols:
+          - http
+          - https
+        preserve_host: true
+
+      - name: auth-protected
+        paths:
+          - /api/auth-service/logout
+        strip_path: false
+        protocols:
+          - http
+          - https
+        preserve_host: true
+        plugins:
+          - name: jwt-to-header
+            config:
+              strip_claims: "false"
+              token_required: "true"
+
+  - name: user-service
+    url: http://user-service:8000
+    routes:
+      - name: user-protected
+        paths:
+          - /api/user-service
+        strip_path: false
+        protocols:
+          - http
+          - https
+        plugins:
+          - name: jwt-to-header
+            config:
+              strip_claims: "false"
+              token_required: "true"
+
+consumers:
+  - username: auth-service-consumer-for-access
+    custom_id: auth-service-access
+    jwt_secrets:
+      - key: auth-service-access
+        algorithm: RS256
+        rsa_public_key: |
+          -----BEGIN PUBLIC KEY-----
+          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsFikVhqF6SMPMJ5qK5q6
+          4skMlEHvPRYFYvzZwQNI96F1zHSXuxDwJjpvYE9LXN7OLoTuqAUWOLuBw6MhNiB9
+          2ugSHMdMy6shiVlVXPb4EDW12pMi1ZtG33x8f0ZfqM+Om/BG2ITaUC5FGub0Jixu
+          ydhBO2txG9poLeHkmLN1Q8H8I7YTYqguOq8udgbMqDYsmIfX0OtRHKi/bzB/6RJo
+          QZNY9OzPgZ2kms1pjggQwdOt+Q5uOXTONt56mLW6Ma0qHev2etbgKmJS5Sn9L8nK
+          letV7EyfRH5SGxRKMGlwufGCJE2AKCl0HfTv9m1uSYfcO+CchW755U8MwpcTQDwF
+          zwIDAQAB
+          -----END PUBLIC KEY-----
+
+  - username: auth-service-consumer-for-refresh
+    custom_id: auth-service-refresh
+    jwt_secrets:
+      - key: auth-service-refresh
+        algorithm: RS256
+        rsa_public_key: |
+          -----BEGIN PUBLIC KEY-----
+          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtzEp8Rlct26WEUIz25c+
+          4HAycaqfS3U9ytKfuVqwbXini4GYgV+ybDrblX99t7oOy3XyAiZ1VkTIkNkwvcAu
+          +oFr2DNdhPXcsd7U+CP6jJ6pGDZA2pvx8lth12ryCDFJ6DsTmTT40CUJkTnKxY6f
+          uvnkNWXnA6amc3p3cYi8iJNuLbWJt3obfIEWpu3UKGboiEXOG12sQWa1bxkyPe4S
+          JA3BSgIqgDLEKyd7QUY+JpKaJfYaIeG1QKhjbM52htVhDzupRGi452XWxh251UDA
+          WCOQ/HsTDzI1fBVqX8IGyNDUX3q0duQyEKJX5sNlWU1btS7jUZc5o94EVEdLN95r
+          hQIDAQAB
+          -----END PUBLIC KEY-----
+
+plugins:
+  - name: jwt
+    route: auth-protected
+    config:
+      header_names:
+        - authorization
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+      realm: "Access Token"
+
+  - name: jwt
+    route: user-protected
+    config:
+      header_names:
+        - authorization
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+      realm: "Access Token"
+
+  - name: jwt
+    route: auth-refresh
+    config:
+      cookie_names:
+        - refresh_token
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+      realm: "Refresh Token"
+
+  # - name: jwt-to-header
+  #   route: auth-protected
+  #   config:
+  #     strip_claims: "false"
+  #     token_required: "true"
+
+  # - name: jwt-to-header
+  #   route: auth-protected
+  #   config:
+  #     strip_claims: "false"
+  #     token_required: "true"
+
+  # - name: jwt-to-header
+  #   route: user-protected
+  #   config:
+  #     strip_claims: "false"
+  #     token_required: "true"
