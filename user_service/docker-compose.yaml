@@ -1,0 +1,60 @@
+networks:
+  user-service-net:
+    external: false
+    driver: bridge
+  api-gateway-net:
+    external: true
+    driver: bridge
+  kafka-net:
+    external: true
+    driver: bridge
+
+volumes:
+  user-postgres-data:
+
+services:
+  user-service:
+    ports:
+      - "6061:8000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: user_service
+    volumes:
+      - ./app:/user_service/app:ro
+    depends_on:
+      - user-postgres
+    networks:
+      - user-service-net
+      - api-gateway-net
+      - kafka-net
+    env_file:
+      - .env
+      - ../.env
+
+  user-postgres:
+    image: postgres:15
+    container_name: user_postgres_db
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - user-postgres-data:/var/lib/postgresql/data
+    networks:
+      - user-service-net
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+  user-pgadmin:
+    image: dpage/pgadmin4
+    container_name: user_pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      - user-postgres
+    networks:
+      - user-service-net
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PG_ADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PG_ADMIN_PASSWORD}

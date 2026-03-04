@@ -1,0 +1,17 @@
+[project]
+name = "auth-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "asyncpg>=0.31.0",
+    "dishka>=1.8.0",
+    "fastapi>=0.131.0",
+    "faststream[kafka]>=0.6.6",
+    "greenlet>=3.3.2",
+    "pydantic-settings>=2.13.1",
+    "pydantic[email]>=2.12.5",
+    "sqlalchemy>=2.0.46",
+    "uvicorn>=0.41.0",
+]
