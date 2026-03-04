@@ -1,0 +1,18 @@
+# Auth Service
+Реалилизация таблиц:
+    ✔ AuthUsers @started(26-02-26 01:14) @done(26-02-26 01:14) @lasted(35s)
+        - id
+        - email
+        - password
+        - banned
+        - role
+    ✔ RefreshTokens @started(26-02-26 01:14) @done(26-02-26 01:14) @lasted(45s)
+        - id
+        - user_id
+        - token
+
+Реализация функционала:
+    ☐ Логин пользователя
+    ☐ Регистрация пользователя
+    ☐ Выход пользователя
+    ☐ Получение нового RefreshToken

@@ -1,0 +1,58 @@
+networks:
+  auth-service-net:
+    external: false
+    driver: bridge
+  api-gateway-net:
+    external: true
+    driver: bridge
+  kafka-net:
+    external: true
+    driver: bridge
+
+volumes:
+  auth-postgres-data:
+
+services:
+  auth-service:
+    ports:
+      - "6060:8000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth_service
+    volumes:
+      - ./app:/auth_service/app:ro
+    networks:
+      - auth-service-net
+      - api-gateway-net
+      - kafka-net
+    env_file: 
+      - .env
+      - ../.env
+
+  auth-postgres:
+    image: postgres:15
+    container_name: auth_postgres_db
+    restart: always
+    volumes:
+      - auth-postgres-data:/var/lib/postgresql/data
+    networks:
+      - auth-service-net
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+  auth-pgadmin:
+    image: dpage/pgadmin4
+    container_name: auth_pgadmin
+    restart: always
+    ports:
+      - "5051:80"
+    depends_on:
+      - auth-postgres
+    networks:
+      - auth-service-net
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PG_ADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PG_ADMIN_PASSWORD}
